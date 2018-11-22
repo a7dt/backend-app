@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var path = require('path');
+var session = require('express-session');
 
 //Import the mongoose module
 var mongoose = require('mongoose');
@@ -24,7 +25,7 @@ db.once('open', () => { console.log("Connected to MongoDB")});
 // view engine
 app.set('view engine', 'ejs');
 
-// body parser for post-requests JSON-data
+// body parser for post-requests (JSON-data)
 var bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -32,9 +33,19 @@ app.use(bodyParser.json());
 // handing static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+//session
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true
+}));
+
 // set routers
 var eventsRouter = require('./routes/eventsRouter');
 app.use('/events', eventsRouter);
+
+var usersRouter = require('./routes/usersRouter');
+app.use('/users', usersRouter);
 
 app.listen(5000, () => {
 	console.log("server running at port 5000.");

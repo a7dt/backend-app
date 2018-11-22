@@ -13,6 +13,7 @@ router.get("/", (req, res) => {
 		}
 
 		res.render("../views/index", {
+			isLogged: req.session.user_id,
 			events:data
 		});
 	});
@@ -58,11 +59,10 @@ router.post("/edit/:id", (req, res) => {
 
         if(err){
             console.log(err);
+            res.send(err);
         }
 
-        console.log("RESULT: " + result);
-
-        res.send('Done');
+        res.redirect("/events");
     });
 
 });
@@ -79,6 +79,14 @@ router.post("/create", (req,res) => {
 		description:desc,
 		price:price
 	});
+
+	
+	/* Another way
+	SomeModel.create({ name: 'also_awesome' }, function (err, awesome_instance) {
+		if (err) return handleError(err);
+		// saved!
+	});
+	*/
 
 	newEvent.save((err) => {
 

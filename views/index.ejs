@@ -6,11 +6,22 @@
 </head>
 
 <body>
-	<h1> Add event </h1>
-	<% include eventForm.ejs %>
 
-	<h2> Events </h2>
-	<% include eventContainer.ejs %>
+		<% if(isLogged) { %>
+
+			<a href="/users/logout"> logout </a>
+			<hr>
+			<% include eventForm.ejs %>
+			<% include eventContainer.ejs %>
+
+		<% } else { %>
+			
+			<% include registerForm.ejs %>
+			<hr>
+			<% include loginForm.ejs %>
+
+		<% } %>
+
 </body>
 
 </html>
