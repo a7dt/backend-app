@@ -6,16 +6,20 @@ var bcrypt = require("bcryptjs");
 
 
 
-router.post("/register", (req, res) => {
+router.post("/register", (req, res, next) => {
 
 	var username = req.body.username;
 	var pwd = req.body.password;
+
+	if( !(username || pwd))
+		next(new Error("Fill all fields"));
+
 
 	bcrypt.genSalt(10, function(err, salt) {
 		bcrypt.hash(pwd, salt, function(err, hash) {
 
 			if(err)
-				res.send("error cannot hash");
+				next(err);
 
 			var newUser = new User({
 				username:username,
@@ -25,30 +29,32 @@ router.post("/register", (req, res) => {
 			newUser.save((err) => {
 
 				if(err) {
-					res.send("ERROR");
+					next(err);
+				}
+				else {
+					res.redirect("/");
 				}
 			});
 
 		});
 	});
 
-	res.redirect("/events");
 });
 
 
-router.post("/login", (req, res) => {
+router.post("/login", (req, res, next) => {
 
 	var username = req.body.username;
 	var pwd = req.body.password;
 
 	if( !(username || pwd))
-		res.end("fill all fields");
+		next(new Error("fill all fields"));
 
 
 	User.findOne({username:username}, (err, user) => {
 
 		if(err)
-			console.log(err);
+			next(err);
 
 		if(user) {
 
@@ -56,19 +62,18 @@ router.post("/login", (req, res) => {
 
 				if(result) {
 					req.session.user_id = user.id;
-					res.redirect("/events");
+					res.redirect("/");
 				}
 
 				else {
-					console.log("failed to auth");
+					next(err);
 				}
 
 			});
 
-
 		}
 		else {
-			console.log("user not found");
+			next(new Error("user not found"));
 		}
 
 	});
@@ -79,7 +84,7 @@ router.post("/login", (req, res) => {
 router.get("/logout", (req, res) => {
 	req.session.destroy();
 
-	res.redirect("/events");
+	res.redirect("/");
 });
 
 module.exports = router;

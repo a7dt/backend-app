@@ -3,12 +3,13 @@
 <% events.map( (one) => { %>
 
 
-	<a href="events/delete/<%= one.id %>"> delete event </a>
+	<a href="/delete/<%= one.id %>"> delete event </a>
 
-	<a href="events/edit/<%= one.id %>"> edit event </a>
+	<a href="/edit/<%= one.id %>"> edit event </a>
 
 
 	<p> <%= one.name %> </p>
 	<p> <%= one.description %> </p>
+	<p> <%= one.price %> </p>
 	<hr>
 <% }); %>

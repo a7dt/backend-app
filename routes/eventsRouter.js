@@ -3,88 +3,121 @@ var router = express.Router();
 
 var Event = require("../models/Event");
 
-router.get("/", (req, res) => {
+
+// Main page
+router.get("/", (req,res,next) => {
 
 	var user_id = req.session.user_id;
 
-
-	Event.find({ user : user_id}, (err, events) => {
-
-		if(err) {
-			console.log(err);
-			res.send(err);
-		}
-
+	// For quest users, render view with login and register forms
+	if(!user_id) {
 		res.render("../views/index", {
-			isLogged: user_id,
-			events:events
+			isLogged: false,
 		});
-	});
-});
-
-
-
-/*
-
-router.get("/search", (req,res) => {
-
-	var searchterm = req.query.term;
-	var isFree = req.query.free;
-
-	if(!isFree)
-		Event.find( { name: { "$regex": searchterm, "$options": "i" }, price : {$gt:0} }, (err, data) => {
-			console.log(data)
-		});
-
+	}
 	else {
-		Event.find( { name: { "$regex": searchterm, "$options": "i"}, price : 0 }, (err, data) => {
-			console.log(data)
+
+		Event.find({ user : user_id}, (err, events) => {
+
+			if(err) {
+				next(err);
+			}
+			else {
+				res.render("../views/index", {
+					isLogged: user_id,
+					events:events
+				});
+			}
 		});
 	}
 });
 
-*/
+
+// Search functionality
+router.get("/search", (req,res,next) => {
+
+	var user_id = req.session.user_id;
+
+	// If session with user_id doesnt exist, return unauthorized
+	if(!user_id) {
+		next(new Error("unauthorized"));
+	}
+	else {
+
+	var searchterm = req.query.term;
+	var isFree = req.query.free;
 
 
+	// User can search by event name and event price
+
+	if(!isFree) {
+		Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i" }, price : {$gt:0} }, (err, events) => {
+
+			if(err) {
+				next(err);
+			}
+			else {
+				res.render("../views/index", {
+					isLogged: user_id,
+					events:events
+				});
+			}
+		});
+	}
+	else {
+		Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i"}, price : 0 }, (err, events) => {
+			if(err) {
+				next(err);
+			}
+			else {
+				res.render("../views/index", {
+					isLogged: user_id,
+					events:events
+				});
+			}
+		});
+	}
+}
+});
 
 
-router.get("/delete/:id", (req,res) => {
+// Deleting event
+router.get("/delete/:id", (req,res,next) => {
 
 	var id = req.params.id;
 	
 	Event.findByIdAndRemove(id, (err) => {
 		if(err) {
-			console.log(err);
-			res.send(err);
+			next(err);
 		}
-		res.redirect("/events");
-	})
-});
-
-
-// Form for edit
-router.get("/edit/:id", (req,res) => {
-
-	var id = req.params.id;
-
-	Event.findById(id, (err, event) => {
-		if(err) {
-			console.log(err);
-			res.send(err);
+		else {
+			res.redirect("/");
 		}
-
-		res.render("../views/edit", {
-			data:event
-		});
 	});
 });
 
 
 
+// Rendering edit form with pre-filled data
+router.get("/edit/:id", (req,res,next) => {
+
+	var id = req.params.id;
+
+	Event.findById(id, (err, event) => {
+		if(err) {
+			next(err);
+		}
+		else {
+			res.render("../views/editForm", {
+				data:event
+			});
+		}
+	});
+});
 
 
-
-router.post("/edit/:id", (req, res) => {
+// Updating data
+router.post("/edit/:id", (req,res,next) => {
 
 	var id = req.params.id;
 
@@ -95,31 +128,25 @@ router.post("/edit/:id", (req, res) => {
 
 	Event.findOneAndUpdate({_id:id}, { $set: { name: name, description:desc, price:price } }, function(err, result) {
 
-        if(err){
-            console.log(err);
-            res.send(err);
+        if(err) {
+            next(err);
         }
-
-        res.redirect("/events");
+        else {
+        	res.redirect("/");
+        }
     });
-
 });
 
 
-
-
-
-
-
-
-
-router.post("/create", (req,res) => {
+// Create new event
+router.post("/create", (req,res,next) => {
 
 	var user_id = req.session.user_id;
 
 	if(!user_id) {
-		res.end();
+		next(new Error("unauthorized"));
 	}
+	else {
 
 	var name = req.body.name;
 	var desc = req.body.description;
@@ -143,16 +170,13 @@ router.post("/create", (req,res) => {
 	newEvent.save((err) => {
 
 		if(err) {
-			console.log(err);
-			res.send(err);
+			next(err);
 		}
-
-		console.log("Saved succesfully");
-
+		else {
+			res.redirect("/");
+		}
 	});
-
-	res.redirect("/events");
-
+}
 });
 
 module.exports = router;

@@ -7,13 +7,7 @@
 
 <body>
 
-		<% if(isLogged) { %>
-		<% } else { %>
-		<% } %>
-
-		<% include registerForm.ejs %>
-		<hr>
-		<% include loginForm.ejs %>
+	<% if(isLogged) { %>
 
 		<a href="/users/logout"> logout </a>
 		<hr>
@@ -22,9 +16,13 @@
 		<% include searchForm.ejs %>
 		<% include eventContainer.ejs %>
 
+	<% } else { %>
 
-			
-
+		<% include registerForm.ejs %>
+		<hr>
+		<% include loginForm.ejs %>
+		
+	<% } %>
 
 </body>
 
