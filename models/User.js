@@ -9,7 +9,7 @@ var userSchema = new mongoose.Schema(
 		password: {
 			type: String,
 			required: true
-		}
+		},
 	});
 
 var User = mongoose.model('User', userSchema);
