@@ -7,17 +7,17 @@ var Event = require("../models/Event");
 // Main page
 router.get("/", (req,res,next) => {
 
+	//var user_id = "5bf9904980523a18ec49166b";
+
 	var user_id = req.session.user_id;
 
-	// For quest users, render view with login and register forms
 	if(!user_id) {
-		res.render("../views/index", {
-			isLogged: false,
-		});
+		next(new Error("unauthorized"));
 	}
+	
 	else {
 
-		Event.find({ user : user_id}, (err, events) => {
+		/*Event.find({ user : user_id}, (err, events) => {
 
 			if(err) {
 				next(err);
@@ -27,14 +27,28 @@ router.get("/", (req,res,next) => {
 					isLogged: user_id,
 					events:events
 				});
+
+				res.json({ events:events});
 			}
-		});
+		});*/
+
+		Event.find({ user : user_id}).lean().exec(function (err, events) {
+			if(err) {
+				next(err);
+			}
+			else {
+				res.json( {events:events} )
+			}
+		})
 	}
 });
 
 
+
 // Search functionality
 router.get("/search", (req,res,next) => {
+
+	//var user_id = "5bf9904980523a18ec49166b";
 
 	var user_id = req.session.user_id;
 
@@ -51,29 +65,39 @@ router.get("/search", (req,res,next) => {
 	// User can search by event name and event price
 
 	if(!isFree) {
-		Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i" }, price : {$gt:0} }, (err, events) => {
+		Event.find( 
+
+			{ user: user_id, name: { "$regex": searchterm, "$options": "i" }, price : {$gt:0} }
+
+		).lean().exec( function (err, events) {
+
+				if(err) {
+					next(err);
+				}
+				else {
+					/*res.render("../views/index", {
+						isLogged: user_id,
+						events:events
+					});*/
+					res.json({ events:events });
+				}
+			});
+	}
+
+	else {
+		Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i"}, price : 0 } )
+
+		.lean().exec(function (err, events) {
 
 			if(err) {
 				next(err);
 			}
 			else {
-				res.render("../views/index", {
+				/*res.render("../views/index", {
 					isLogged: user_id,
 					events:events
-				});
-			}
-		});
-	}
-	else {
-		Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i"}, price : 0 }, (err, events) => {
-			if(err) {
-				next(err);
-			}
-			else {
-				res.render("../views/index", {
-					isLogged: user_id,
-					events:events
-				});
+				});*/
+				res.json({ events:events });
 			}
 		});
 	}
@@ -91,8 +115,12 @@ router.get("/delete/:id", (req,res,next) => {
 			next(err);
 		}
 		else {
-			res.redirect("/");
+			res.json( {success:true} );
 		}
+		/*else {
+			res.redirect("/");
+		}*/
+
 	});
 });
 
@@ -103,14 +131,17 @@ router.get("/edit/:id", (req,res,next) => {
 
 	var id = req.params.id;
 
-	Event.findById(id, (err, event) => {
+
+	Event.findById(id).lean().exec(function (err, event) {
+
 		if(err) {
 			next(err);
 		}
 		else {
-			res.render("../views/editForm", {
+			/*res.render("../views/editForm", {
 				data:event
-			});
+			});*/
+			res.json({ event:event });
 		}
 	});
 });
@@ -132,7 +163,7 @@ router.post("/edit/:id", (req,res,next) => {
             next(err);
         }
         else {
-        	res.redirect("/");
+        	res.json( {success: true} )
         }
     });
 });
@@ -143,21 +174,24 @@ router.post("/create", (req,res,next) => {
 
 	var user_id = req.session.user_id;
 
+	//var user_id = "5bf9904980523a18ec49166b"
+
 	if(!user_id) {
 		next(new Error("unauthorized"));
 	}
+
 	else {
 
-	var name = req.body.name;
-	var desc = req.body.description;
-	var price = req.body.price;
+		var name = req.body.name;
+		var desc = req.body.description;
+		var price = req.body.price;
 
-	var newEvent = new Event({
-		name:name,
-		description:desc,
-		price:price,
-		user: user_id
-	});
+		var newEvent = new Event({
+			name:name,
+			description:desc,
+			price:price,
+			user: user_id
+		});
 
 	
 	/* Another way
@@ -167,13 +201,13 @@ router.post("/create", (req,res,next) => {
 	});
 	*/
 
-	newEvent.save((err) => {
+		newEvent.save((err) => {
 
 		if(err) {
 			next(err);
 		}
 		else {
-			res.redirect("/");
+			res.json( {success: true} )
 		}
 	});
 }

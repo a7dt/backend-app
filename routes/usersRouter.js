@@ -12,7 +12,7 @@ router.post("/register", (req, res, next) => {
 	var pwd = req.body.password;
 
 	if( !(username || pwd))
-		next(new Error("Fill all fields"));
+		next(new Error("empty field"));
 
 
 	bcrypt.genSalt(10, function(err, salt) {
@@ -20,22 +20,24 @@ router.post("/register", (req, res, next) => {
 
 			if(err)
 				next(err);
+			else {
 
-			var newUser = new User({
-				username:username,
-				password: hash
-			});
+				var newUser = new User({
+					username:username,
+					password: hash
+				});
 
-			newUser.save((err) => {
+				newUser.save((err) => {
 
-				if(err) {
-					next(err);
-				}
-				else {
-					res.redirect("/");
-				}
-			});
-
+					if(err) {
+						next(err);
+					}
+					else {
+						// res.redirect("/");
+						res.json( {success:true} );
+					}
+				});
+			}
 		});
 	});
 
@@ -48,7 +50,7 @@ router.post("/login", (req, res, next) => {
 	var pwd = req.body.password;
 
 	if( !(username || pwd))
-		next(new Error("fill all fields"));
+		next(new Error("empty field"));
 
 
 	User.findOne({username:username}, (err, user) => {
@@ -62,7 +64,10 @@ router.post("/login", (req, res, next) => {
 
 				if(result) {
 					req.session.user_id = user.id;
-					res.redirect("/");
+
+					console.log("session started")
+					//res.redirect("/");
+					res.json( {success:true} );
 				}
 
 				else {
@@ -83,8 +88,8 @@ router.post("/login", (req, res, next) => {
 
 router.get("/logout", (req, res) => {
 	req.session.destroy();
-
-	res.redirect("/");
+	console.log("session ended")
+	res.json( {success:true} );
 });
 
 module.exports = router;

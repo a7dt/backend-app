@@ -3,32 +3,32 @@ var app = express();
 var path = require('path');
 var session = require('express-session');
 var methodOverride = require('method-override')
+var cors = require('cors')
 
 
 // Middleware function for errors
-/*customErrorHandler = (err, req, res, next) => {
+customErrorHandler = (err, req, res, next) => {
 
 	if(err.message === "unauthorized") {
-		res.status(401).send({"error": "unauthorized"});
+		res.status(401).send( {"error": "unauthorized"} );
 	}
 
-	else if(err.message === "fill all fields") {
-		console.log("a")
+	else if(err.message === "empty field") {
+		res.status(400).send( {"error": "fill all fields"} );
 	}
 
 	else if(err.message === "not found") {
-		console.log("b");
+		res.status(400).send( {"error": "user not found"} );
 	}
 
-	console.log(err);
-
 	else {
-		res.status(500).send({"error": "error with status 500"});
+		res.status(500).send( {"error": "error with status 500"} );
 	}
 
 	next();
 
-}*/
+}
+
 
 //Import the mongoose module
 var mongoose = require('mongoose');
@@ -57,6 +57,15 @@ var bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// for frontend app requests to work
+//app.use(cors());
+
+app.use(cors({
+    origin:['http://localhost:3000'],
+    methods:['GET','POST'],
+    credentials: true // enable set cookie
+}));
+
 app.use(methodOverride());
 
 // handing static files
@@ -76,7 +85,7 @@ app.use('/', eventsRouter);
 var usersRouter = require('./routes/usersRouter');
 app.use('/users', usersRouter);
 
-//app.use(customErrorHandler);
+app.use(customErrorHandler);
 
 app.listen(5000, () => {
 	console.log("server running at port 5000.");
