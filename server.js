@@ -49,44 +49,48 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => { console.log("Connected to MongoDB")});
 
 
-// view engine
-app.set('view engine', 'ejs');
 
-// body parser for post-requests (JSON-data)
+// Body parser middleware to handle json data in post-requests
 var bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// for frontend app requests to work
-//app.use(cors());
 
+// For frontend app requests to work as intended
 app.use(cors({
     origin:['http://localhost:3000'],
     methods:['GET','POST'],
-    credentials: true // enable set cookie
+    credentials: true
 }));
 
+
+// For error handling middleware
 app.use(methodOverride());
 
-// handing static files
+
+// Handing static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-//session
+
+// Session
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: true
 }));
 
-// set routers
+
+// Set routers
 var eventsRouter = require('./routes/eventsRouter');
 app.use('/', eventsRouter);
 
 var usersRouter = require('./routes/usersRouter');
 app.use('/users', usersRouter);
 
+
 app.use(customErrorHandler);
 
+
 app.listen(5000, () => {
-	console.log("server running at port 5000.");
+	console.log("Server running at port 5000.");
 });
