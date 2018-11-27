@@ -11,37 +11,40 @@ router.post("/register", (req, res, next) => {
 	var username = req.body.username;
 	var pwd = req.body.password;
 
-	if( !(username || pwd))
+	if( username === "" || pwd === "" )
 		next(new Error("empty field"));
 
-	bcrypt.genSalt(10, function(err, salt) {
+	else {
 
-		bcrypt.hash(pwd, salt, function(err, hash) {
+		bcrypt.genSalt(10, function(err, salt) {
 
-			if(err) {
-				next(err);
-			}
+			bcrypt.hash(pwd, salt, function(err, hash) {
 
-			else {
+				if(err) {
+					next(err);
+				}
 
-				var newUser = new User({
-					username:username,
-					password: hash
-				});
+				else {
 
-				newUser.save((err) => {
+					var newUser = new User({
+						username:username,
+						password: hash
+					});
 
-					if(err) {
-						next(err);
-					}
+					newUser.save((err) => {
 
-					else {
-						res.json( {success:true} );
-					}
-				});
-			}
+						if(err) {
+							next(err);
+						}
+
+						else {
+							res.json( {success:true} );
+						}
+					});
+				}
+			});
 		});
-	});
+	}
 });
 
 
@@ -51,35 +54,38 @@ router.post("/login", (req, res, next) => {
 	var username = req.body.username;
 	var pwd = req.body.password;
 
-	if( !(username || pwd))
+	if( username === "" || pwd === "" )
 		next(new Error("empty field"));
 
-	User.findOne({username:username}, (err, user) => {
+	else {
 
-		if(err)
-			next(err);
+		User.findOne({username:username}, (err, user) => {
 
-		if(user) {
+			if(err)
+				next(err);
 
-			bcrypt.compare(pwd, user.password, function(err, result) {
+			if(user) {
 
-				if(result) {
-					// If username and password match, start session
-					req.session.user_id = user.id;
-					console.log("Session started");
-					res.json( {success:true} );
-				}
+				bcrypt.compare(pwd, user.password, function(err, result) {
 
-				else {
-					next(err);
-				}
-			});
+					if(result) {
+						// If username and password match, start session
+						req.session.user_id = user.id;
+						console.log("Session started");
+						res.json( {success:true} );
+					}
 
-		}
-		else {
-			next(new Error("user not found"));
-		}
-	});
+					else {
+						next(err);
+					}
+				});
+
+			}
+			else {
+				next(new Error("user not found"));
+			}
+		});
+	}
 });
 
 
