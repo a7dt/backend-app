@@ -18,7 +18,7 @@ customErrorHandler = (err, req, res, next) => {
 	}
 
 	else if(err.message === "not found") {
-		res.status(400).send( {"error": "user not found"} );
+		res.status(400).send( {"error": "not found"} );
 	}
 
 	else {

@@ -66,7 +66,7 @@ router.post("/login", (req, res, next) => {
 				if(result) {
 					// If username and password match, start session
 					req.session.user_id = user.id;
-					console.log("session started");
+					console.log("Session started");
 					res.json( {success:true} );
 				}
 

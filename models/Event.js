@@ -12,6 +12,7 @@ var eventSchema = new mongoose.Schema(
 			required: true
 		},
 		price: {
+			required: true,
 			type: Number,
 			min: 0
 		},

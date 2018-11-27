@@ -41,12 +41,12 @@ router.get("/search", (req,res,next) => {
 
 	else {
 
-		// User can search by event name and event price
-		var searchterm = req.query.term;
+		var searchterm = req.query.term ? req.query.term : "";
 		var isFree = req.query.free;
 
 
-		if(!isFree) {
+		if(isFree === "false" && searchterm !== "") {
+
 			Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i" }, price : {$gt:0} } )
 			.lean().exec( function (err, events) {
 
@@ -54,22 +54,69 @@ router.get("/search", (req,res,next) => {
 					next(err);
 				}
 
-				else {
+				if(events) {
 					res.json({ events:events });
+				}
+
+				else {
+					res.json({ success: true });
 				}
 			});
 		}
 
-		else {
-			Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i"}, price : 0 } )
+		else if(isFree === "true" && searchterm !== "") {
+
+			Event.find( { user: user_id, name: { "$regex": searchterm, "$options": "i"}, price : {$eq: 0} } )
 			.lean().exec(function (err, events) {
 
 				if(err) {
 					next(err);
 				}
 
-				else {
+				if(events) {
 					res.json({ events:events });
+				}
+
+				else {
+					res.json({ success: true });
+				}
+			});
+		}
+
+		else if(isFree === "true" && searchterm === "") {
+
+			Event.find( { user: user_id, price : {$eq: 0} } )
+			.lean().exec(function (err, events) {
+
+				if(err) {
+					next(err);
+				}
+
+				if(events) {
+					res.json({ events:events });
+				}
+
+				else {
+					res.json({ success: true });
+				}
+			});
+		}
+
+		else if(isFree === "false" && searchterm === "") {
+
+			Event.find( { user: user_id, price : {$gt: 0} } )
+			.lean().exec(function (err, events) {
+
+				if(err) {
+					next(err);
+				}
+
+				if(events) {
+					res.json({ events:events });
+				}
+
+				else {
+					res.json({ success: true });
 				}
 			});
 		}
@@ -107,6 +154,9 @@ router.get("/edit/:id", (req,res,next) => {
 			next(err);
 		}
 
+		if(!event) {
+			next(new Error());
+		}
 		else {
 			res.json({ event:event });
 		}
@@ -123,16 +173,27 @@ router.post("/edit/:id", (req,res,next) => {
 	var desc = req.body.description;
 	var price = req.body.price;
 
-	Event.findOneAndUpdate({_id:id}, { $set: { name: name, description:desc, price:price } }, function(err, result) {
+	if(!name || !desc || typeof price != "number") {
+		next(new Error());
+	}
 
-        if(err) {
-            next(err);
-        }
+	else {
 
-        else {
-        	res.json( {success: true} )
-        }
-    });
+		Event.findOneAndUpdate({_id:id}, { $set: { name: name, description:desc, price:price } }, function(err, result) {
+
+        	if(err) {
+            	next(err);
+        	}
+
+        	if(result) {
+        		res.json( {success: true} )
+        	} 
+        	else {
+        		next(new Error());
+        	}
+        
+    	});
+	}
 });
 
 
